@@ -26,10 +26,13 @@ interface CreateViewOptions {
 }
 
 const LINK_LABELS: Record<LinkType, string> = {
-  none: "—",
+  none: "-",
   same: "Same",
-  reverse: "Reverse",
+  reverse: "Opp.",
 };
+
+// Order the clickable link box cycles through on each click.
+const LINK_CYCLE: LinkType[] = ["none", "same", "reverse"];
 
 export function createCreateView(
   root: HTMLElement,
@@ -108,6 +111,11 @@ export function createCreateView(
       ),
     );
 
+    const legend = document.createElement("p");
+    legend.className = "hint matrix-legend";
+    legend.textContent = "Opp. = Opposite";
+    section.append(legend);
+
     if (plateCount < 2) {
       const hint = document.createElement("p");
       hint.className = "hint";
@@ -116,7 +124,10 @@ export function createCreateView(
       return section;
     }
 
-    section.append(renderMatrix());
+    const scroll = document.createElement("div");
+    scroll.className = "matrix-scroll";
+    scroll.append(renderMatrix());
+    section.append(scroll);
     return section;
   }
 
@@ -138,7 +149,13 @@ export function createCreateView(
       const row = document.createElement("tr");
       const rowHead = document.createElement("th");
       rowHead.scope = "row";
-      rowHead.textContent = `Move ${moved + 1}`;
+      const fullLabel = document.createElement("span");
+      fullLabel.className = "move-label-full";
+      fullLabel.textContent = `Move ${moved + 1}`;
+      const shortLabel = document.createElement("span");
+      shortLabel.className = "move-label-short";
+      shortLabel.textContent = `M ${moved + 1}`;
+      rowHead.append(fullLabel, shortLabel);
       row.append(rowHead);
 
       for (let affected = 0; affected < plateCount; affected++) {
@@ -160,25 +177,30 @@ export function createCreateView(
       return cell;
     }
 
-    const select = document.createElement("select");
-    select.setAttribute(
-      "aria-label",
-      `Effect on plate ${affected + 1} when plate ${moved + 1} moves`,
-    );
+    const box = document.createElement("button");
+    box.type = "button";
+    box.className = "matrix-link";
 
-    (Object.keys(LINK_LABELS) as LinkType[]).forEach(link => {
-      const option = document.createElement("option");
-      option.value = link;
-      option.textContent = LINK_LABELS[link];
-      option.selected = matrix[moved][affected] === link;
-      select.append(option);
+    const applyLink = (link: LinkType): void => {
+      box.textContent = LINK_LABELS[link];
+      box.dataset.link = link;
+      box.setAttribute(
+        "aria-label",
+        `Effect on plate ${affected + 1} when plate ${moved + 1} moves: ${LINK_LABELS[link]}`,
+      );
+    };
+
+    applyLink(matrix[moved][affected]);
+
+    box.addEventListener("click", () => {
+      const current = matrix[moved][affected];
+      const next =
+        LINK_CYCLE[(LINK_CYCLE.indexOf(current) + 1) % LINK_CYCLE.length];
+      matrix[moved][affected] = next;
+      applyLink(next);
     });
 
-    select.addEventListener("change", () => {
-      matrix[moved][affected] = select.value as LinkType;
-    });
-
-    cell.append(select);
+    cell.append(box);
     return cell;
   }
 

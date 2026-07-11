@@ -270,14 +270,73 @@ button.board-cell:hover {
   background: var(--code-bg);
 }
 
-.matrix select {
+.matrix-legend {
+  margin: 4px 0 0;
+  text-align: left;
+  font-size: 12px;
+}
+
+/* Keep the matrix within its panel; scroll horizontally if it can't fit. */
+.matrix-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Full "Move N" label on wide screens; short "M N" is hidden here. */
+.move-label-short {
+  display: none;
+}
+
+.matrix-link {
   font: inherit;
-  font-size: 14px;
-  padding: 4px 6px;
-  border-radius: 6px;
+  font-size: 13px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text-h);
+  cursor: pointer;
+}
+
+.matrix-link:hover {
+  border-color: var(--text-h);
+}
+
+.matrix-link[data-link="none"] {
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .matrix {
+    margin-inline: 0;
+  }
+
+  .matrix th,
+  .matrix td {
+    padding: 3px;
+    font-size: 12px;
+  }
+
+  .matrix-corner {
+    font-size: 10px;
+    white-space: normal;
+  }
+
+  .matrix-link {
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+  }
+
+  .move-label-full {
+    display: none;
+  }
+
+  .move-label-short {
+    display: inline;
+  }
 }
 
 /* Actions & controls ---------------------------------------------------- */
