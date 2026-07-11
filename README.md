@@ -1,0 +1,95 @@
+# Gothic 1 Remake Lockpick
+
+This is a reproduction of the lockpicking minigame from the Gothic 1 Remake game.
+
+This features two modes
+1. Create mode, where you design the puzzle 
+2. Play mode, where you try and solve the puzzle
+
+
+## Game Mechanics
+
+In the lock picking minigame, you have a variable number of sliding plates. 
+Each plate has 7 holes with one pin. The goal is to align all of the pins in each hole to 
+the fourth slot.
+
+Some plates may be linked to others. So if you move a plate left, another one or two might move right, and another move left. 
+
+
+### Representation
+
+For 3 plates, you can represent the game like so:
+
+   1 2 3 4 5 6 7
+3 |*| | | | | | |
+2 | | |*| | | | |
+1 | | | | | | |*|
+
+Where * represents the current spot.
+
+And the rules can be represented by a matrix.
+
+Legend:
+blank = no connection
+S = same direction
+R = reverse direction
+X = Same plate, ignore.
+
+
+  1 2 3
+1 X S S
+2   X R
+3 S   X
+
+For this one, when you move plate 1 right, plates 2 and 3 also move right.
+When you move plate 2 right, plate 3 moves left as it is the reverse.
+
+# Game Modes
+
+## Create Mode
+
+Here you 
+1. Choose the number of plates
+2. Choose the initial positions of the pins
+3. Set up the rules between plates
+
+Once finished, you can switch to Play mode to try it out.
+Or, you can click the share button to share it with friends or enemies.
+
+## Play Mode
+
+Here you try to solve the puzzle.
+
+You start with Row 1 - the bottom-most row. 
+You can move the pin left or right using the left or right arrow keys
+To switch rows, use the up and down arrow keys. So up will take you to row 2.
+
+Below the game is the list of actions you have taken, like
+
+Plate 1: Left
+Plate 3: Right
+
+Click the "Reset" button to go back to the original setup and clear the list of actions.
+
+Click the "Solve" button to compute the shortest sequence of moves from the
+current position and list them below your actions. Because the board has a
+finite number of states, a breadth-first search always finds the shortest
+solution if one exists, and can tell you for certain when a puzzle is
+unsolvable from where you are.
+
+# Project
+
+## To build the project, run
+
+```bash
+
+npm run build
+```
+
+
+## To run tests
+
+```bash
+
+npm run test
+```
