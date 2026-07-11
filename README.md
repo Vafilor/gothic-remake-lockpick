@@ -1,5 +1,11 @@
 # Gothic 1 Remake Lockpick
 
+<a href="https://vafilor.github.io/gothic-remake-lockpick/?puzzle=JTdCJTIyY29sdW1uQ291bnQlMjIlM0E3JTJDJTIydGFyZ2V0Q29sdW1uJTIyJTNBMyUyQyUyMmluaXRpYWxQb3NpdGlvbnMlMjIlM0ElNUI2JTJDNSUyQzAlMkM1JTJDMSU1RCUyQyUyMnJ1bGVzJTIyJTNBJTVCJTdCJTIybGVmdCUyMiUzQSU1Qi0xJTJDMCUyQzAlMkMtMSUyQzElNUQlMkMlMjJyaWdodCUyMiUzQSU1QjElMkMwJTJDMCUyQzElMkMtMSU1RCU3RCUyQyU3QiUyMmxlZnQlMjIlM0ElNUIxJTJDLTElMkMwJTJDMSUyQzElNUQlMkMlMjJyaWdodCUyMiUzQSU1Qi0xJTJDMSUyQzAlMkMtMSUyQy0xJTVEJTdEJTJDJTdCJTIybGVmdCUyMiUzQSU1QjAlMkMwJTJDLTElMkMwJTJDLTElNUQlMkMlMjJyaWdodCUyMiUzQSU1QjAlMkMwJTJDMSUyQzAlMkMxJTVEJTdEJTJDJTdCJTIybGVmdCUyMiUzQSU1QjAlMkMwJTJDMCUyQy0xJTJDMCU1RCUyQyUyMnJpZ2h0JTIyJTNBJTVCMCUyQzAlMkMwJTJDMSUyQzAlNUQlN0QlMkMlN0IlMjJsZWZ0JTIyJTNBJTVCMCUyQzElMkMtMSUyQy0xJTJDLTElNUQlMkMlMjJyaWdodCUyMiUzQSU1QjAlMkMtMSUyQzElMkMxJTJDMSU1RCU3RCU1RCU3RA%3D%3D#create">
+    <img src=".github/assets/demo.png">
+</a>
+
+<a href="https://vafilor.github.io/gothic-remake-lockpick/?puzzle=JTdCJTIyY29sdW1uQ291bnQlMjIlM0E3JTJDJTIydGFyZ2V0Q29sdW1uJTIyJTNBMyUyQyUyMmluaXRpYWxQb3NpdGlvbnMlMjIlM0ElNUI2JTJDNSUyQzAlMkM1JTJDMSU1RCUyQyUyMnJ1bGVzJTIyJTNBJTVCJTdCJTIybGVmdCUyMiUzQSU1Qi0xJTJDMCUyQzAlMkMtMSUyQzElNUQlMkMlMjJyaWdodCUyMiUzQSU1QjElMkMwJTJDMCUyQzElMkMtMSU1RCU3RCUyQyU3QiUyMmxlZnQlMjIlM0ElNUIxJTJDLTElMkMwJTJDMSUyQzElNUQlMkMlMjJyaWdodCUyMiUzQSU1Qi0xJTJDMSUyQzAlMkMtMSUyQy0xJTVEJTdEJTJDJTdCJTIybGVmdCUyMiUzQSU1QjAlMkMwJTJDLTElMkMwJTJDLTElNUQlMkMlMjJyaWdodCUyMiUzQSU1QjAlMkMwJTJDMSUyQzAlMkMxJTVEJTdEJTJDJTdCJTIybGVmdCUyMiUzQSU1QjAlMkMwJTJDMCUyQy0xJTJDMCU1RCUyQyUyMnJpZ2h0JTIyJTNBJTVCMCUyQzAlMkMwJTJDMSUyQzAlNUQlN0QlMkMlN0IlMjJsZWZ0JTIyJTNBJTVCMCUyQzElMkMtMSUyQy0xJTJDLTElNUQlMkMlMjJyaWdodCUyMiUzQSU1QjAlMkMtMSUyQzElMkMxJTJDMSU1RCU3RCU1RCU3RA%3D%3D#create">Try it out</a>
+
 This is a reproduction of the lockpicking minigame from the Gothic 1 Remake game.
 
 This features two modes
@@ -20,10 +26,12 @@ Some plates may be linked to others. So if you move a plate left, another one or
 
 For 3 plates, you can represent the game like so:
 
+```
    1 2 3 4 5 6 7
 3 |*| | | | | | |
 2 | | |*| | | | |
 1 | | | | | | |*|
+```
 
 Where * represents the current spot.
 
@@ -32,14 +40,15 @@ And the rules can be represented by a matrix.
 Legend:
 blank = no connection
 S = same direction
-R = reverse direction
+R = reverse direction (also displayed as Opposite or Opp. in the UI)
 X = Same plate, ignore.
 
-
+```
   1 2 3
 1 X S S
 2   X R
 3 S   X
+```
 
 For this one, when you move plate 1 right, plates 2 and 3 also move right.
 When you move plate 2 right, plate 3 moves left as it is the reverse.
@@ -78,6 +87,13 @@ solution if one exists, and can tell you for certain when a puzzle is
 unsolvable from where you are.
 
 # Project
+
+## To run locally in dev mode,
+
+```bash
+
+npm run dev
+```
 
 ## To build the project, run
 
