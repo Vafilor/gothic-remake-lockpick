@@ -27,7 +27,7 @@ describe("solve", () => {
     const result = solve(linked, linked.initialPositions);
 
     expect(result.status).toBe("solved");
-    // From [1,1], two right moves on plate 1 aligns both pins on slot 4.
+    // From [1,1], two left moves on plate 1 slide both pins right onto slot 4.
     expect(result.moves.length).toBe(2);
 
     let state = createGameState(linked);

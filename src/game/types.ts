@@ -15,8 +15,10 @@ export interface PuzzleDefinition {
   targetColumn: number; // In the game this is 4, but we can change it if we want.
   initialPositions: number[];
 
-  // rules[rowIndex] describes what happens when that
-  // row's left or right button is pressed.
+  // rules[rowIndex].left / .right are the pin offsets for that row when its pin
+  // slides left / right. Controls move the *plate*, which carries the pin the
+  // opposite way, so the engine flips direction before applying a rule (see
+  // pinMovements in engine.ts).
   rules: MoveRule[];
 }
 

@@ -1,3 +1,4 @@
+import { pinMovements } from "./engine";
 import type { Action, Direction, PuzzleDefinition } from "./types";
 
 const DIRECTIONS: Direction[] = ["left", "right"];
@@ -35,7 +36,7 @@ function step(
   row: number,
   direction: Direction,
 ): number[] | null {
-  const movements = puzzle.rules[row][direction];
+  const movements = pinMovements(puzzle.rules[row], direction);
   const next = positions.map(
     (position, index) => position + movements[index],
   );

@@ -1,8 +1,24 @@
 import type {
   Direction,
   GameState,
+  MoveRule,
   PuzzleDefinition,
 } from "./types";
+
+// A plate slides opposite to its pin: pushing a plate left carries its pin to
+// the right. So moving a plate in one direction applies the pin rule for the
+// other direction.
+const OPPOSITE_DIRECTION: Record<Direction, Direction> = {
+  left: "right",
+  right: "left",
+};
+
+// The pin offsets produced by sliding a plate the given direction. `direction`
+// describes how the plate moves; the rule arrays describe how the pins move,
+// which is the reverse.
+export function pinMovements(rule: MoveRule, direction: Direction): number[] {
+  return rule[OPPOSITE_DIRECTION[direction]];
+}
 
 export function createGameState(puzzle: PuzzleDefinition): GameState {
   return {
@@ -24,7 +40,7 @@ export function calculateMove(
     throw new RangeError(`Unknown row: ${selectedRow}`);
   }
 
-  const movements = rule[direction];
+  const movements = pinMovements(rule, direction);
 
   if (movements.length !== state.positions.length) {
     throw new Error("Rule size does not match row count");

@@ -4,20 +4,99 @@ export interface BoardOptions {
   positions: number[];
   // Highlighted plate row (play mode).
   selectedRow?: number;
-  // Click handler used by the designer to place pins.
+  // Click handler used by the designer to place pins. Its presence also selects
+  // the create-mode (static grid) rendering over the play-mode sliding board.
   onCellClick?: (plate: number, column: number) => void;
 }
 
-// Renders a grid of plates (rows) by holes (columns). Plates are drawn with the
-// highest-numbered plate on top and plate 1 at the bottom, matching the README.
+// The play board models each plate as a strip of holes that slides behind a
+// fixed pick. The create board keeps the simpler static grid where a pin is
+// dropped onto a slot. `onCellClick` (only supplied by the designer) picks
+// between them.
 export function renderBoard(options: BoardOptions): HTMLElement {
-  const {
-    columnCount,
-    targetColumn,
-    positions,
-    selectedRow,
-    onCellClick,
-  } = options;
+  return options.onCellClick
+    ? renderStaticBoard(options)
+    : renderSlidingBoard(options);
+}
+
+// Play mode. A fixed pick sits over the target slot; each plate slides behind
+// it carrying a single pin. The pin rides the plate's target hole, so the strip
+// is offset by `position - targetColumn` cells, which places the pin at screen
+// slot `position`. Sliding a plate right moves the pin toward higher slots;
+// the plate is solved when its pin reaches the pick (position === targetColumn).
+function renderSlidingBoard(options: BoardOptions): HTMLElement {
+  const { columnCount, targetColumn, positions, selectedRow } = options;
+
+  const board = document.createElement("div");
+  board.className = "board board--play";
+  board.style.setProperty("--columns", String(columnCount));
+  board.style.setProperty("--target", String(targetColumn));
+
+  // Highest-numbered plate on top, plate 1 at the bottom, matching the README.
+  for (let plate = positions.length - 1; plate >= 0; plate--) {
+    const position = positions[plate];
+    const aligned = position === targetColumn;
+
+    const row = document.createElement("div");
+    row.className = "board-row";
+
+    const label = document.createElement("div");
+    label.className = "board-label";
+    label.dataset.plate = String(plate);
+    if (plate === selectedRow) label.classList.add("is-selected");
+    label.textContent = `Plate ${plate + 1}`;
+    row.append(label);
+
+    const track = document.createElement("div");
+    track.className = "board-track";
+    if (plate === selectedRow) track.classList.add("is-selected");
+    track.setAttribute(
+      "aria-label",
+      `Plate ${plate + 1}: pin on slot ${position + 1}` +
+        (aligned ? ", at the pick" : ""),
+    );
+
+    const strip = document.createElement("div");
+    strip.className = "board-strip";
+    strip.dataset.plate = String(plate);
+    strip.style.setProperty("--offset", String(position - targetColumn));
+
+    for (let column = 0; column < columnCount; column++) {
+      const hole = document.createElement("div");
+      hole.className = "board-hole";
+      hole.dataset.plate = String(plate);
+      hole.dataset.column = String(column);
+
+      // The pin lives on the plate's target hole and rides along as it slides.
+      if (column === targetColumn) {
+        const pin = document.createElement("span");
+        pin.className = "hole-pin";
+        if (aligned) pin.classList.add("is-aligned");
+        hole.append(pin);
+      }
+
+      strip.append(hole);
+    }
+
+    track.append(strip);
+
+    // The pick: a fixed marker over the target slot the plate slides beneath.
+    const pick = document.createElement("div");
+    pick.className = "board-pick";
+    if (aligned) pick.classList.add("is-aligned");
+    track.append(pick);
+
+    row.append(track);
+    board.append(row);
+  }
+
+  return board;
+}
+
+// Create mode. A static grid of slots; clicking one drops that plate's pin.
+function renderStaticBoard(options: BoardOptions): HTMLElement {
+  const { columnCount, targetColumn, positions, selectedRow, onCellClick } =
+    options;
 
   const board = document.createElement("div");
   board.className = "board";
