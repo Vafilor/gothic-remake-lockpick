@@ -238,6 +238,144 @@ button.board-cell:hover {
   background: var(--accent);
 }
 
+/* Sliding play board ---------------------------------------------------- */
+
+.board--play {
+  /* Width of one hole plus the gap between holes; drives the strip offset. */
+  --cell: 48px;
+  --gap: 6px;
+  --stride: calc(var(--cell) + var(--gap));
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 100%;
+
+  @media (max-width: 640px) {
+    --cell: 32px;
+    --gap: 4px;
+  }
+}
+
+.board-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.board-row .board-label {
+  flex: 0 0 auto;
+  width: 68px;
+}
+
+@media (max-width: 640px) {
+  .board-row {
+    gap: 8px;
+  }
+
+  .board-row .board-label {
+    width: 56px;
+    padding-right: 6px;
+    font-size: 12px;
+  }
+}
+
+/* The fixed window the holes slide behind. Exactly `columns` cells wide. */
+.board-track {
+  position: relative;
+  flex: 1 1 auto;
+  height: var(--cell);
+  max-width: calc(var(--columns) * var(--stride) - var(--gap));
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+/* Fade the holes as they slide off either edge of the window. */
+.board-track::before,
+.board-track::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--cell);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.board-track::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg), transparent);
+}
+
+.board-track::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg), transparent);
+}
+
+.board-strip {
+  display: flex;
+  gap: var(--gap);
+  transform: translateX(calc(var(--offset, 0) * var(--stride)));
+  transition: transform 0.3s ease;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-strip {
+    transition: none;
+  }
+}
+
+.board-hole {
+  position: relative;
+  flex: 0 0 var(--cell);
+  height: var(--cell);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+/* The single pin, riding one hole of the plate. */
+.hole-pin {
+  width: 52%;
+  height: 52%;
+  border-radius: 50%;
+  background: var(--text-h);
+}
+
+.hole-pin.is-aligned {
+  background: var(--success);
+}
+
+/* The fixed pick, centred over the target slot; holes slide beneath it. The
+   track clips it, so the aligned cue stays inside its bounds (inset glow). */
+.board-pick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--target) * var(--stride) + var(--cell) / 2);
+  width: var(--cell);
+  transform: translateX(-50%);
+  z-index: 1;
+  border: 2px solid var(--accent-border);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.board-pick.is-aligned {
+  border-color: var(--success);
+  box-shadow: inset 0 0 0 2px rgba(31, 157, 85, 0.25);
+}
+
+.board-track.is-selected {
+  outline: 2px solid var(--accent-border);
+  outline-offset: 2px;
+}
+
 /* Link matrix ----------------------------------------------------------- */
 
 .matrix {

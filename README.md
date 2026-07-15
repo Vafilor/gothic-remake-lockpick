@@ -69,9 +69,15 @@ Or, you can click the share button to share it with friends or enemies.
 
 Here you try to solve the puzzle.
 
+A fixed "pick" sits over the fourth slot of every row. Each plate carries a
+single pin, and you solve the puzzle by sliding each plate so its pin lines up
+under the pick.
+
 You start with Row 1 - the bottom-most row. 
-You can move the pin left or right using the left or right arrow keys
-To switch rows, use the up and down arrow keys. So up will take you to row 2.
+You slide the selected plate left or right using the left or right arrow keys.
+The pick stays put while the plate slides beneath it: pressing left slides the
+plate (and its pin) to the right, and pressing right slides it to the left. To
+switch rows, use the up and down arrow keys. So up will take you to row 2.
 
 Below the game is the list of actions you have taken, like
 

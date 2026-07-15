@@ -5,8 +5,8 @@ import { createPlayView } from "./playView";
 import type { PuzzleDefinition } from "../game/types";
 
 // Two plates: moving plate 1 also moves plate 2 the same way (a "same" link).
-// Both pins start one slot left of the target, so a single right move on plate 1
-// aligns everything.
+// Both pins start one slot left of the target, so a single left move on plate 1
+// (which slides its pin right) aligns everything.
 const puzzle: PuzzleDefinition = {
   columnCount: 7,
   targetColumn: 3,
@@ -35,15 +35,15 @@ describe("play view", () => {
 
     expect(root.querySelector(".banner.success")).toBeNull();
 
-    // Plate 1 is selected by default; move it right to align both pins.
-    pressKey("ArrowRight");
+    // Plate 1 is selected by default; slide it left to carry both pins right.
+    pressKey("ArrowLeft");
 
     const banner = root.querySelector(".banner.success");
     expect(banner?.textContent).toContain("Unlocked");
 
     const historyItems = root.querySelectorAll(".history li");
     expect(historyItems.length).toBe(1);
-    expect(historyItems[0].textContent).toBe("Plate 1: Right");
+    expect(historyItems[0].textContent).toBe("Plate 1: Left");
   });
 
   test("ignores keyboard input while hidden", () => {
@@ -81,7 +81,8 @@ describe("play view", () => {
 
   test("Solve lists the shortest steps in the same format as the history", () => {
     const view = createPlayView(root);
-    // Start both pins two slots left of the target: two right moves solve it.
+    // Start both pins two slots left of the target: two left moves (each
+    // sliding the pins right) solve it.
     view.load({ ...puzzle, initialPositions: [1, 1] });
 
     clickButton(root, "Solve");
@@ -94,7 +95,7 @@ describe("play view", () => {
     const steps = Array.from(
       solution?.querySelectorAll("li") ?? [],
     ).map(item => item.textContent);
-    expect(steps).toEqual(["Plate 1: Right", "Plate 1: Right"]);
+    expect(steps).toEqual(["Plate 1: Left", "Plate 1: Left"]);
   });
 
   test("keeps the solution visible while moving so it can be followed", () => {
@@ -118,35 +119,23 @@ describe("play view", () => {
     expect(root.querySelector(".solution")).toBeNull();
   });
 
-  test("slides the pins when a move succeeds", () => {
+  test("slides both linked rows when a move succeeds", () => {
     const view = createPlayView(root);
+    // Both pins start on slot 3 (offset position - targetColumn = -1); a left
+    // move slides them to slot 4 (offset 0), under the pick.
     view.load({ ...puzzle, initialPositions: [2, 2] });
 
-    // happy-dom does no layout, so fake each cell's x-position from its column.
-    const originalRect = HTMLElement.prototype.getBoundingClientRect;
-    HTMLElement.prototype.getBoundingClientRect = function (
-      this: HTMLElement,
-    ): DOMRect {
-      const column = Number(this.dataset.column ?? "0");
-      return { left: column * 40 } as DOMRect;
-    };
+    const offsets = () =>
+      Array.from(
+        root.querySelectorAll<HTMLElement>(".board-strip"),
+      ).map(strip => strip.style.getPropertyValue("--offset"));
 
-    let slides = 0;
-    const originalAnimate = HTMLElement.prototype.animate;
-    HTMLElement.prototype.animate = function (): Animation {
-      slides++;
-      return {} as Animation;
-    } as HTMLElement["animate"];
+    expect(offsets()).toEqual(["-1", "-1"]);
 
-    try {
-      pressKey("ArrowRight");
-    } finally {
-      HTMLElement.prototype.getBoundingClientRect = originalRect;
-      HTMLElement.prototype.animate = originalAnimate;
-    }
+    pressKey("ArrowLeft");
 
-    // Both linked pins moved a column, so both should have been animated.
-    expect(slides).toBe(2);
+    // Both linked strips slid one slot, bringing their pin under the pick.
+    expect(offsets()).toEqual(["0", "0"]);
   });
 
   // Records which plate each shake animation targeted, surviving re-renders by
@@ -170,11 +159,11 @@ describe("play view", () => {
 
   test("shakes every linked row when a move is invalid", () => {
     const view = createPlayView(root);
-    // Both pins sit against the left edge, so a left move is impossible.
-    // Plate 1's "left" rule is [-1, -1], so it drags plate 2 along.
+    // Both pins sit against the left edge. Sliding plate 1 right pushes its pin
+    // further left, which is impossible; it drags plate 2 along ([-1, -1]).
     view.load({ ...puzzle, initialPositions: [0, 0] });
 
-    const shaken = trackShakenPlates(() => pressKey("ArrowLeft"));
+    const shaken = trackShakenPlates(() => pressKey("ArrowRight"));
 
     // Both plates would have moved, so both shake; state is unchanged.
     expect(shaken).toEqual(new Set(["0", "1"]));
@@ -183,14 +172,14 @@ describe("play view", () => {
 
   test("shakes only the plates a move would actually shift", () => {
     const view = createPlayView(root);
-    // Plate 2's "left" rule is [0, -1] — it moves alone. With plate 2 at the
-    // edge, a left move on plate 2 is invalid and should shake only plate 2.
+    // Plate 2's pin moves alone ([0, -1]). With plate 2 at the left edge,
+    // sliding it right pushes its pin off the board and should shake only it.
     view.load({ ...puzzle, initialPositions: [3, 0] });
 
-    // Select plate 2 (index 1), then try to move it left.
+    // Select plate 2 (index 1), then try to slide it right.
     const shaken = trackShakenPlates(() => {
       pressKey("ArrowUp");
-      pressKey("ArrowLeft");
+      pressKey("ArrowRight");
     });
 
     expect(shaken).toEqual(new Set(["1"]));

@@ -34,11 +34,13 @@ describe("applyMove", () => {
   test("moves all affected rows", () => {
     const state = createGameState(puzzle);
 
+    // Sliding plate 1 left carries its pin right, so the "right" pin rule
+    // [1, -1, 0] applies: [1, 5, 3] -> [2, 4, 3].
     const nextState = applyMove(
       puzzle,
       state,
       0,
-      "right",
+      "left",
     );
 
     expect(nextState.positions).toEqual([2, 4, 3]);
@@ -62,9 +64,11 @@ describe("applyMove", () => {
 
     const state = createGameState(edgePuzzle);
 
-    expect(canMove(edgePuzzle, state, 0, "left")).toBe(false);
+    // Plate 1's pin sits on slot 0; sliding the plate right pushes the pin off
+    // the left edge, so the move is rejected and state is returned unchanged.
+    expect(canMove(edgePuzzle, state, 0, "right")).toBe(false);
     expect(
-      applyMove(edgePuzzle, state, 0, "left"),
+      applyMove(edgePuzzle, state, 0, "right"),
     ).toBe(state);
   });
 });

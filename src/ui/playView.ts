@@ -3,6 +3,7 @@ import {
   canMove,
   createGameState,
   hasWon,
+  pinMovements,
 } from "../game/engine";
 import { solve, type SolveResult } from "../game/solver";
 import { validatePuzzle } from "../game/validation";
@@ -32,11 +33,9 @@ const SHAKE_KEYFRAMES: Keyframe[] = [
 const SHAKE_TIMING: KeyframeAnimationOptions = {
   duration: 260,
   easing: "ease-in-out",
-};
-
-const PIN_SLIDE_TIMING: KeyframeAnimationOptions = {
-  duration: 300,
-  easing: "ease",
+  // Add the nudge on top of the strip's existing offset transform so the row
+  // shakes where it sits instead of snapping to the centered position first.
+  composite: "add",
 };
 
 function prefersReducedMotion(): boolean {
@@ -52,7 +51,7 @@ function affectedPlates(
   direction: Direction,
 ): number[] {
   const plates: number[] = [];
-  puzzle.rules[row][direction].forEach((offset, plate) => {
+  pinMovements(puzzle.rules[row], direction).forEach((offset, plate) => {
     if (offset !== 0) plates.push(plate);
   });
   return plates;
@@ -96,56 +95,43 @@ export function createPlayView(root: HTMLElement): PlayView {
   function move(direction: Direction): void {
     if (!puzzle || !state || hasWon(puzzle, state)) return;
     if (!canMove(puzzle, state, selectedRow, direction)) {
-      // The move would push a pin off the board — nudge every plate the move
+      // The move would push a hole past the pick — nudge every plate the move
       // would have shifted (the pressed plate plus any linked ones) to signal it.
       shakeRows(affectedPlates(puzzle, selectedRow, direction));
       return;
     }
-    // FLIP: record where the pins are, apply the move (which re-renders the
-    // board with the pins in their new cells), then slide each pin from its
-    // old position to the new one.
-    const before = capturePinPositions();
+    // Apply the move (which re-renders each strip at its new offset), then
+    // animate every strip that shifted from its old offset to the new one.
+    const before = state.positions.slice();
     state = applyMove(puzzle, state, selectedRow, direction);
     // The solution stays on screen so it can be followed step by step; it is
     // only dismissed via its close button, a reset, or loading a new puzzle.
     render();
-    slidePins(before);
+    slideStrips(before, state.positions);
   }
 
-  // Maps each plate to the left edge of the cell its pin currently occupies.
-  function capturePinPositions(): Map<string, number> {
-    const positions = new Map<string, number>();
-    root.querySelectorAll<HTMLElement>(".board-cell").forEach(cell => {
-      const plate = cell.dataset.plate;
-      if (plate !== undefined && cell.querySelector(".pin")) {
-        positions.set(plate, cell.getBoundingClientRect().left);
-      }
-    });
-    return positions;
-  }
+  // FLIP each strip using a CSS transition: snap it back to its previous offset
+  // with transitions off, force a reflow, then restore the new offset so it
+  // slides there. Plates whose position is unchanged are left alone.
+  function slideStrips(before: number[], after: number[]): void {
+    if (!puzzle || prefersReducedMotion()) return;
+    const target = puzzle.targetColumn;
 
-  function slidePins(before: Map<string, number>): void {
-    if (prefersReducedMotion()) return;
-    root.querySelectorAll<HTMLElement>(".board-cell").forEach(cell => {
-      const pin = cell.querySelector<HTMLElement>(".pin");
-      const plate = cell.dataset.plate;
-      if (!pin || plate === undefined || typeof pin.animate !== "function") {
-        return;
-      }
+    after.forEach((position, plate) => {
+      if (before[plate] === position) return;
 
-      const from = before.get(plate);
-      if (from === undefined) return;
-
-      const dx = from - cell.getBoundingClientRect().left;
-      if (dx === 0) return;
-
-      pin.animate(
-        [
-          { transform: `translateX(${dx}px)` },
-          { transform: "translateX(0)" },
-        ],
-        PIN_SLIDE_TIMING,
+      const strip = root.querySelector<HTMLElement>(
+        `.board-strip[data-plate="${plate}"]`,
       );
+      if (!strip) return;
+
+      strip.style.transition = "none";
+      strip.style.setProperty("--offset", String(before[plate] - target));
+      // Force the browser to apply the old offset before re-enabling the
+      // transition, so the change to the new offset animates.
+      void strip.offsetWidth;
+      strip.style.transition = "";
+      strip.style.setProperty("--offset", String(position - target));
     });
   }
 
@@ -153,10 +139,10 @@ export function createPlayView(root: HTMLElement): PlayView {
     if (prefersReducedMotion()) return;
     plates.forEach(plate => {
       root
-        .querySelectorAll<HTMLElement>(`[data-plate="${plate}"]`)
-        .forEach(cell => {
-          if (typeof cell.animate === "function") {
-            cell.animate(SHAKE_KEYFRAMES, SHAKE_TIMING);
+        .querySelectorAll<HTMLElement>(`.board-strip[data-plate="${plate}"]`)
+        .forEach(strip => {
+          if (typeof strip.animate === "function") {
+            strip.animate(SHAKE_KEYFRAMES, SHAKE_TIMING);
           }
         });
     });
@@ -289,8 +275,8 @@ function renderInstructions(): HTMLElement {
   const hint = document.createElement("p");
   hint.className = "hint";
   hint.textContent =
-    "Use ← → to move the selected plate and ↑ ↓ to switch plates. " +
-    "Align every pin on slot 4.";
+    "Use ← → to slide the selected plate and ↑ ↓ to switch plates. " +
+    "Bring every plate's pin under the pick.";
   return hint;
 }
 
